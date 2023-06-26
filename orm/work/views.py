@@ -1,4 +1,8 @@
-from rest_framework import viewsets
+from pstats import Stats
+import statistics
+from rest_framework import viewsets, status
+from rest_framework.decorators import action
+from rest_framework.response import Response
 
 from .models import Category, Comment, Like, Post
 from .serializers import (
@@ -13,6 +17,77 @@ class CategoryViewSet(viewsets.ModelViewSet):
 
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
+
+    @action(detail=False, methods=['POST'])
+    def create_data(self, request, *args, **kwargs):
+        data = self.serializer_class(data=request.data or None)
+        data.is_valid(raise_exception=True)
+
+        title_data = data.validated_data.get('title')
+        slug_data = data.validated_data.get('slug')
+        description_data = data.validated_data.get('description')
+
+        obj = Category.objects.create(
+            description = description_data, slug = slug_data, title = title_data
+        )
+        serializer = self.serializer_class(obj)
+
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    @action(detail=False, methods=['POST'])
+    def save_data(self, request, *args, **kwargs):
+
+        data = self.serializer_class(data=request.data or None)
+        data.is_valid(raise_exception=True)
+
+        title_data = data.validated_data.get('title')
+        slug_data = data.validated_data.get('slug')
+        description_data = data.validated_data.get('description')
+
+        obj = Category()
+        obj.title = title_data
+        obj.slug = slug_data
+        obj.description = description_data
+        obj.save()
+
+        serializer = self.serializer_class(obj)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+    @action(detail=False, methods=['POST'])
+    def get_or_create_data(self, request, *args, **kwargs):
+        data = self.serializer_class(data=request.data or None)
+        data.is_valid(raise_exception=True)
+
+        title_data = data.validated_data.get('title')
+        slug_data = data.validated_data.get('slug')
+
+        obj, _ =Category.objects.get_or_create(title=title_data, slug=slug_data)
+
+        serializer = self.serializer_class(obj)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    
+    @action(detail=False, methods=['POST'])
+    def bulk_create_data(self, request, *args, **kwargs):
+        data = self.serializer_class(data=request.data or None, many=True)
+        data.is_valid(raise_exception=True)
+
+        new_data = []
+        for row in data.validated_data:
+                new_data.append(
+                    Category(
+                    title = row['title'],
+                    slug = row['slug'],
+                    description = row['description']
+                    )
+                )
+
+        if new_data:
+           new_data = Category.objects.bulk_create(new_data)
+        
+
+        return Response("successfully created data" ,status=status.HTTP_201_CREATED)
 
 
 class CommentViewSet(viewsets.ModelViewSet):
@@ -31,3 +106,37 @@ class PostViewSet(viewsets.ModelViewSet):
 
     queryset = Post.objects.all()
     serializer_class = PostSerializer
+
+    @action(detail=True, methods=['PATCH'])
+    def add_category(self, request, pk, *args, **kwargs):
+        
+        categories_data = request.data.get("ids")
+
+        instance = Post.objects.filter(pk=pk).first()
+
+        # inefficient
+        # for category in catagories:
+        #     instance.category.add(category)
+
+        categories_data = set(categories_data)
+        instance.category.add(*categories_data)
+
+        serializer = self.serializer_class(instance)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+    @action(detail=True, methods=['PATCH'])
+    def set_category(self, request, pk, *args, **kwargs):
+        
+        categories_data = request.data.get("ids")
+
+        instance = Post.objects.filter(pk=pk).first()
+
+        # instance.category.clear()
+        # categories_data = set(categories_data)
+        # instance.category.add(*categories_data)
+
+        instance.category.set(categories_data)
+
+        serializer = self.serializer_class(instance)
+        return Response(serializer.data, status=status.HTTP_200_OK)
