@@ -1,8 +1,12 @@
+from collections import UserDict
 from pstats import Stats
 import statistics
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from django.contrib.auth.models import User
+from . models import Hero,Villain
+
 
 from .models import Category, Comment, Like, Post
 from .serializers import (
@@ -127,6 +131,7 @@ class PostViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['PATCH'])
     def set_category(self, request, pk, *args, **kwargs):
+
         
         categories_data = request.data.get("ids")
 
@@ -140,3 +145,17 @@ class PostViewSet(viewsets.ModelViewSet):
 
         serializer = self.serializer_class(instance)
         return Response(serializer.data, status=status.HTTP_200_OK)
+    
+
+
+from django.db.models import Q
+class orm_document(viewsets.ModelViewSet):
+
+    qs = User.objects.filter(Q(first_name__startswith='R')|Q(last_name__startswith='D'))#or
+    queryset_3 = User.objects.filter(Q(first_name__startswith='R') & Q(last_name__startswith='D'))#and
+    queryset = User.objects.filter(~Q(id__lt=5)) #not
+    #union of two querysets from same or different models
+    Hero.objects.all().values_list("name", "gender").union(Villain.objects.all().values_list("name", "gender"))
+
+    # select some fields only in a queryset
+    queryset = User.objects.filter(first_name__startswith='R').only("first_name", "last_name")

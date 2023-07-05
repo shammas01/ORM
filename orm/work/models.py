@@ -3,6 +3,7 @@ from django.db import models
 from django.utils.translation import gettext_lazy as _
 
 
+
 class STATUS(models.TextChoices):
     DRAFT = "0", _("Draft")
     PUBLISH = "1", _("Publish")
@@ -68,3 +69,14 @@ class Like(models.Model):
         related_name="likes",
         on_delete=models.CASCADE,
     )
+
+
+class Hero(models.Model):
+    fist_name = models.CharField(max_length=50)
+    last_name = models.ForeignKey(User.last_name, on_delete=models.CASCADE)
+
+
+
+class Villain(models.Model):
+    fist_name = models.CharField(max_length=50)
+    last_name = models.ForeignKey(User.last_name, on_delete=models.CASCADE)
