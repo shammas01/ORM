@@ -73,10 +73,10 @@ class Like(models.Model):
 
 class Hero(models.Model):
     fist_name = models.CharField(max_length=50)
-    last_name = models.ForeignKey(User.last_name, on_delete=models.CASCADE)
+    last_name = models.ForeignKey(User, on_delete=models.CASCADE)
 
 
 
 class Villain(models.Model):
     fist_name = models.CharField(max_length=50)
-    last_name = models.ForeignKey(User.last_name, on_delete=models.CASCADE)
+    last_name = models.ForeignKey(User, on_delete=models.CASCADE)

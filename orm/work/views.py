@@ -155,7 +155,7 @@ class orm_document(viewsets.ModelViewSet):
     queryset_3 = User.objects.filter(Q(first_name__startswith='R') & Q(last_name__startswith='D'))#and
     queryset = User.objects.filter(~Q(id__lt=5)) #not
     #union of two querysets from same or different models
-    Hero.objects.all().values_list("name", "gender").union(Villain.objects.all().values_list("name", "gender"))
+    Hero.objects.all().values_list("fist_name", "last_name").union(Villain.objects.all().values_list("fist_name", "last_name"))
 
     # select some fields only in a queryset
     queryset = User.objects.filter(first_name__startswith='R').only("first_name", "last_name")
